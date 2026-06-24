@@ -166,6 +166,13 @@ def human_override(image_id: int, action: str, db: Session = Depends(get_db)):
     db.commit()
     return {"status": "success"}
 
+@app.post("/clear-history")
+def clear_history(db: Session = Depends(get_db)):
+    """Deletes all DB records (clearing the dashboard) but preserves the actual files on disk"""
+    db.query(ModeratedImage).delete()
+    db.commit()
+    return {"status": "success", "message": "History cleared"}
+
 @app.get("/stats")
 def get_stats(db: Session = Depends(get_db)):
     total = db.query(ModeratedImage).count()
