@@ -13,7 +13,7 @@ def evaluate_rules(nudenet_out: dict, clip_out: dict, yolo_out: dict) -> tuple[s
     # ---------------------------------------------------------
     # 1. AUTO-FLAG: Absolute highest priority violations
     # ---------------------------------------------------------
-    if nude_score >= 0.85:
+    if nude_score >= 0.65:
         return ("NUDITY", "FLAG")
         
     if weapon_score >= 0.60:

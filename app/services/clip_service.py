@@ -17,6 +17,7 @@ CONTEXT_CONCEPTS = [
 ]
 
 RISK_CONCEPTS = [
+    "pornography", "explicit nudity", "sexual intercourse",
     "upskirt view", "camera focused on buttocks", "camera focused on crotch area",
     "micro bikini", "extremely revealing clothing", "nearly nude person", 
     "transparent clothing", "sheer clothing", "see-through clothing", "mesh clothing"

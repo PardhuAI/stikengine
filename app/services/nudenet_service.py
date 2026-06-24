@@ -48,7 +48,7 @@ def moderate_image_nudenet(crops: dict) -> dict:
             all_detections[crop_name] = crop_detections
             
         decision = "SAFE"
-        if highest_score >= 0.85:
+        if highest_score >= 0.65:
             decision = "FLAG"
         elif highest_score >= 0.40 or has_suggestive:
             decision = "UNCERTAIN" # This routes the image to the Rules Engine tripwire
