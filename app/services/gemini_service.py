@@ -4,7 +4,14 @@ import base64
 import mimetypes
 from openai import OpenAI
 
-client = OpenAI(
+# Primary: Google's native OpenAI-compatible endpoint
+google_client = OpenAI(
+  base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+  api_key=os.getenv("GEMINI_API_KEY"),
+)
+
+# Secondary: OpenRouter fallback
+openrouter_client = OpenAI(
   base_url="https://openrouter.ai/api/v1",
   api_key=os.getenv("OPENROUTER_API_KEY"),
 )
@@ -13,7 +20,7 @@ def encode_image(image_path: str):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
 
-# NEW: Helper function to get correct MIME type
+# Helper function to get correct MIME type
 def get_mime_type(image_path: str):
     mime_type, _ = mimetypes.guess_type(image_path)
     return mime_type or "image/jpeg"
@@ -54,32 +61,50 @@ def moderate_image_gemini(image_path: str, nudenet_out: dict, clip_out: dict, yo
     }}
     """
     
-    try:
-        response = client.chat.completions.create(
-            model="google/gemini-2.5-flash",
-            temperature=0,
-            response_format={"type": "json_object"},
-            messages=[
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
                 {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:{mime_type};base64,{base64_image}" # Use dynamic MIME type
-                            }
-                        }
-                    ]
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:{mime_type};base64,{base64_image}" # Use dynamic MIME type
+                    }
                 }
             ]
+        }
+    ]
+    
+    try:
+        # First attempt: Primary Google Gemini API
+        response = google_client.chat.completions.create(
+            model="gemini-2.5-flash",
+            temperature=0,
+            response_format={"type": "json_object"},
+            messages=messages
         )
         result_text = response.choices[0].message.content
         return json.loads(result_text)
-    except Exception as e:
-        return {
-            "decision": "FLAG",
-            "confidence": 0.0,
-            "reason": f"Gemini API Error: {str(e)}",
-            "category": "REVIEW"
-        }
+        
+    except Exception as e1:
+        print(f"[Gemini Service] Primary Google API failed: {str(e1)}. Falling back to OpenRouter...")
+        try:
+            # Second attempt: Fallback to OpenRouter
+            response = openrouter_client.chat.completions.create(
+                model="google/gemini-2.5-flash",
+                temperature=0,
+                response_format={"type": "json_object"},
+                messages=messages
+            )
+            result_text = response.choices[0].message.content
+            return json.loads(result_text)
+            
+        except Exception as e2:
+            print(f"[Gemini Service] Both Primary and Fallback APIs failed. Error: {str(e2)}")
+            return {
+                "decision": "FLAG",
+                "confidence": 0.0,
+                "reason": f"Gemini API Error (Primary & Fallback failed): {str(e2)}",
+                "category": "REVIEW"
+            }
