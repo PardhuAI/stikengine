@@ -12,9 +12,17 @@ SENSITIVE_LABELS = [
     "ANUS_EXPOSED"
 ]
 
+# NEW: Tripwires for sheer/tight clothing
+SUGGESTIVE_LABELS = [
+    "FEMALE_BREAST_COVERED", 
+    "BUTTOCKS_COVERED", 
+    "FEMALE_GENITALIA_COVERED"
+]
+
 def moderate_image_nudenet(crops: dict) -> dict:
     highest_score = 0.0
     highest_crop = "original"
+    has_suggestive = False
     all_detections = {}
     
     try:
@@ -26,20 +34,24 @@ def moderate_image_nudenet(crops: dict) -> dict:
                 label = result['class']
                 score = result['score']
                 
-                # Only care about strictly exposed labels for NudeNet V2
+                # Check for absolute nudity
                 if label in SENSITIVE_LABELS:
                     crop_detections.append(f"{label} ({score:.2f})")
                     if score > highest_score:
                         highest_score = score
                         highest_crop = crop_name
+                # NEW: Check for suggestive clothing (tripwire for Gemini)
+                elif label in SUGGESTIVE_LABELS and score > 0.60:
+                    crop_detections.append(f"{label} ({score:.2f})")
+                    has_suggestive = True
             
             all_detections[crop_name] = crop_detections
             
         decision = "SAFE"
         if highest_score >= 0.85:
             decision = "FLAG"
-        elif highest_score >= 0.40:
-            decision = "UNCERTAIN"
+        elif highest_score >= 0.40 or has_suggestive:
+            decision = "UNCERTAIN" # This routes the image to the Rules Engine tripwire
             
         return {
             "nudity_score": highest_score,

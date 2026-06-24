@@ -1,6 +1,7 @@
 import os
 import json
 import base64
+import mimetypes
 from openai import OpenAI
 
 client = OpenAI(
@@ -12,8 +13,14 @@ def encode_image(image_path: str):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
 
+# NEW: Helper function to get correct MIME type
+def get_mime_type(image_path: str):
+    mime_type, _ = mimetypes.guess_type(image_path)
+    return mime_type or "image/jpeg"
+
 def moderate_image_gemini(image_path: str, nudenet_out: dict, clip_out: dict, yolo_out: dict) -> dict:
     base64_image = encode_image(image_path)
+    mime_type = get_mime_type(image_path) # Dynamically grab png/webp/jpeg
     
     context = json.dumps({
         "nudenet": nudenet_out,
@@ -60,7 +67,7 @@ def moderate_image_gemini(image_path: str, nudenet_out: dict, clip_out: dict, yo
                         {
                             "type": "image_url",
                             "image_url": {
-                                "url": f"data:image/jpeg;base64,{base64_image}"
+                                "url": f"data:{mime_type};base64,{base64_image}" # Use dynamic MIME type
                             }
                         }
                     ]
