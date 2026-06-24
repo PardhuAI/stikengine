@@ -8,32 +8,18 @@ model, _, preprocess = open_clip.create_model_and_transforms('ViT-B-32', pretrai
 tokenizer = open_clip.get_tokenizer('ViT-B-32')
 
 CONTEXT_CONCEPTS = [
-    "sports photo",
-    "family photo",
-    "travel photo",
-    "vacation",
-    "pet photo",
-    "food image",
-    "marketplace product",
-    "beach photo",
-    "portrait photo"
+    "sports photo", "family photo", "travel photo", "vacation",
+    "pet photo", "food image", "marketplace product", "beach photo",
+    "portrait photo",
+    "fashion photography", "red carpet event", "casual selfie", 
+    "woman wearing a dress", "professional photoshoot", 
+    "everyday clothing", "social media post"
 ]
 
 RISK_CONCEPTS = [
-    "upskirt view",
-    "camera focused on buttocks",
-    "camera focused on crotch area",
-    "sexualized pose",
-    "revealing pose",
-    "provocative pose",
-    "micro bikini",
-    "extremely revealing clothing",
-    "minimal clothing",
-    "nearly nude person",
-    "transparent clothing",
-    "sheer clothing",
-    "see-through clothing",
-    "mesh clothing"
+    "upskirt view", "camera focused on buttocks", "camera focused on crotch area",
+    "micro bikini", "extremely revealing clothing", "nearly nude person", 
+    "transparent clothing", "sheer clothing", "see-through clothing", "mesh clothing"
 ]
 
 # Precompute independent pairs for multi-label scoring

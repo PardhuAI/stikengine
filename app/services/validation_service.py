@@ -1,4 +1,4 @@
-import hashlib
+import imagehash
 from fastapi import UploadFile, HTTPException
 from PIL import Image, ImageOps
 import os
@@ -8,11 +8,11 @@ import shutil
 MAX_FILE_SIZE = 10 * 1024 * 1024 # 10 MB
 
 def calculate_hash(file_path: str) -> str:
-    sha256_hash = hashlib.sha256()
-    with open(file_path, "rb") as f:
-        for byte_block in iter(lambda: f.read(4096), b""):
-            sha256_hash.update(byte_block)
-    return sha256_hash.hexdigest()
+    try:
+        img = Image.open(file_path)
+        return str(imagehash.dhash(img))
+    except Exception:
+        return ""
 
 def validate_and_process_image(file: UploadFile) -> dict:
     # Check size

@@ -52,6 +52,8 @@ async def upload_image(file: UploadFile = File(...), db: Session = Depends(get_d
     existing = db.query(ModeratedImage).filter(ModeratedImage.image_hash == val_data["hash"]).first()
     if existing:
         cleanup_crops(crops)
+        if os.path.exists(original_path):
+            os.remove(original_path)
         return UploadResponse(
             status=existing.final_decision,
             category=existing.final_category,

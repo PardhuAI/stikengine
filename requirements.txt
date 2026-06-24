@@ -11,3 +11,4 @@ torchvision
 open_clip_torch
 ultralytics
 Pillow
+ImageHash
