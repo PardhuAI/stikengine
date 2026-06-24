@@ -81,6 +81,10 @@ async def upload_image(file: UploadFile = File(...), db: Session = Depends(get_d
         decision = gemini_out.get("decision", "FLAG")
         category = gemini_out.get("category", "REVIEW")
         gemini_score = gemini_out.get("confidence", 0.0)
+        
+        # If Gemini fails, explicitly route to human review queue
+        if gemini_out.get("reason", "").startswith("Gemini API Error"):
+            decision = "REVIEW"
     
     # Clean up temporary crops
     cleanup_crops(crops)
@@ -151,7 +155,7 @@ def human_override(image_id: int, action: str, db: Session = Depends(get_db)):
     final_dir = "uploads/safe" if new_decision == "SAFE" else "uploads/flagged"
     new_path = f"{final_dir}/{filename}"
     
-    if os.path.exists(old_path):
+    if os.path.exists(old_path) and old_path != new_path:
         os.rename(old_path, new_path)
         
     db_image.image_url = new_path
@@ -200,6 +204,8 @@ def get_images(status: str, db: Session = Depends(get_db)):
         images = db.query(ModeratedImage).filter(ModeratedImage.final_decision == "SAFE").order_by(ModeratedImage.upload_time.desc()).all()
     elif status == "flagged" or status == "flag":
         images = db.query(ModeratedImage).filter(ModeratedImage.final_decision == "FLAG").order_by(ModeratedImage.upload_time.desc()).all()
+    elif status == "gemini":
+        images = db.query(ModeratedImage).filter(ModeratedImage.gemini_output != None).order_by(ModeratedImage.upload_time.desc()).all()
     else:
         raise HTTPException(status_code=400, detail="Invalid status")
         
