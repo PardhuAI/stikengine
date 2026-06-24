@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+*.pyc
+.env
+stikguard.db
+uploads/
+yolov8n.pt
+.DS_Store

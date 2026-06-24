@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+nudenet
+sqlalchemy
+python-multipart
+openai
+pydantic
+python-dotenv
+torch
+torchvision
+open_clip_torch
+ultralytics
+Pillow
